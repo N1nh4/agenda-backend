@@ -1,0 +1,39 @@
+package com.engenharia_software.agenda.security;
+
+import java.util.List;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+
+@Configuration
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            // em APIs com frontend separado, normalmente desabilitamos CSRF
+            .csrf(csrf -> csrf.disable())
+            // definindo quem pode acessar o quê
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/auth/login", "/auth/me", "/auth/logout", "/agenda", "/usuario", "/minha_agenda/**", "/uploads/**", "/h2-console/**").permitAll()  // acesso público
+                .anyRequest().authenticated()  // resto precisa estar logado
+            )
+            .cors(cors -> cors.configurationSource(request -> {
+                var corsConfig = new CorsConfiguration();
+                corsConfig.setAllowedOrigins(List.of("http://localhost:3000"));
+                corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                corsConfig.setAllowCredentials(true);
+                corsConfig.setAllowedHeaders(List.of("*"));
+                return corsConfig;
+            }))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) 
+            );
+
+        return http.build();
+    }
+}
