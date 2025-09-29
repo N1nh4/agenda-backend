@@ -2,6 +2,7 @@ package com.engenharia_software.agenda.security;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,6 +12,12 @@ import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${frontend.local.url:http://localhost:3000}")
+    private String localFrontendUrl;
+
+    @Value("${frontend.prod.url:https://agenda-frontend-xi.vercel.app}")
+    private String prodFrontendUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -29,17 +36,14 @@ public class SecurityConfig {
                     "/minha_agenda/**",
                     "/uploads/**",
                     "/h2-console/**"
-                ).permitAll()  // essas rotas ficam públicas
-                .anyRequest().authenticated() // qualquer outra precisa estar autenticada
+                ).permitAll()  // rotas públicas
+                .anyRequest().authenticated() // resto precisa de login
             )
 
             // Configuração de CORS
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfig = new CorsConfiguration();
-                corsConfig.setAllowedOrigins(List.of(
-                    "http://localhost:3000", // Para testes locais
-                    "https://agenda-frontend-xi.vercel.app" // Frontend no Vercel
-                ));
+                corsConfig.setAllowedOrigins(List.of(localFrontendUrl, prodFrontendUrl));
                 corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
                 corsConfig.setAllowCredentials(true);
                 corsConfig.setAllowedHeaders(List.of("*"));
@@ -54,3 +58,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
