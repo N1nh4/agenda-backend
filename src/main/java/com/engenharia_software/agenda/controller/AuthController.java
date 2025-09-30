@@ -25,13 +25,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO login, HttpServletRequest request) { 
+    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginDTO login, HttpServletRequest request) {
         UsuarioDTO usuario = as.login(login, request);
-        if (usuario != null) {
-            request.getSession().setAttribute("usuario", usuario);
-            return ResponseEntity.status(HttpStatus.OK).body(usuario);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.status(401).body("Usuário ou senha inválidos!");
+        return ResponseEntity.ok(usuario);
     }
 
     @PostMapping("/logout")
