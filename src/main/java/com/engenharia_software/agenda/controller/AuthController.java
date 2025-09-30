@@ -1,19 +1,14 @@
 package com.engenharia_software.agenda.controller;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
+import com.engenharia_software.agenda.DTO.LoginDTO;
+import com.engenharia_software.agenda.DTO.LoginResponse;
+import com.engenharia_software.agenda.DTO.UsuarioDTO;
 import com.engenharia_software.agenda.service.AuthService;
+import com.engenharia_software.agenda.util.JwtUtil;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
-
-import com.engenharia_software.agenda.DTO.LoginDTO;
-import com.engenharia_software.agenda.DTO.UsuarioDTO;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,42 +20,33 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO login, HttpServletRequest request) { 
-        UsuarioDTO usuario = as.login(login, request);
+    public ResponseEntity<?> login(@RequestBody LoginDTO login) {
+        UsuarioDTO usuario = as.login(login, null); // sem session
         if (usuario != null) {
-            request.getSession().setAttribute("usuario", usuario);
-            return ResponseEntity.status(HttpStatus.OK).body(usuario);
+            String token = JwtUtil.gerarToken(usuario);
+            return ResponseEntity.ok(new LoginResponse(usuario, token));
         }
-        return ResponseEntity.status(401).body("Usuário ou senha inválidos!");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário ou senha inválidos!");
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-
-        // sobrescreve o cookie JSESSIONID no cliente
-        Cookie cookie = new Cookie("JSESSIONID", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // expira imediatamente
-        response.addCookie(cookie);
-
+    public ResponseEntity<String> logout() {
+        // Com JWT, logout é feito no front removendo o token
         return ResponseEntity.ok("Deslogado com sucesso!");
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me(HttpServletRequest request) {
-        HttpSession session = request.getSession(false); // não cria sessão nova
-        if (session != null) {
-            UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
-            if (usuario != null) {
-                return ResponseEntity.ok(usuario);
-            }
+    public ResponseEntity<?> me(@RequestHeader("Authorization") String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token ausente ou inválido!");
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Não autorizado!");
+
+        String token = authorizationHeader.replace("Bearer ", "");
+        UsuarioDTO usuario = JwtUtil.validarToken(token);
+        if (usuario != null) {
+            return ResponseEntity.ok(usuario);
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido ou expirado!");
     }
 }
