@@ -13,9 +13,6 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${frontend.local.url:http://localhost:3000}")
-    private String localFrontendUrl;
-
     @Value("${frontend.prod.url:https://agenda-frontend-xi.vercel.app}")
     private String prodFrontendUrl;
 
@@ -43,7 +40,7 @@ public class SecurityConfig {
             // Configuração de CORS
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfig = new CorsConfiguration();
-                corsConfig.setAllowedOrigins(List.of(localFrontendUrl, prodFrontendUrl));
+                corsConfig.setAllowedOrigins(List.of(prodFrontendUrl));
                 corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
                 corsConfig.setAllowCredentials(true);
                 corsConfig.setAllowedHeaders(List.of("*"));
