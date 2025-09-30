@@ -3,6 +3,7 @@ package com.engenharia_software.agenda.security;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -55,6 +56,12 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    // Adicione este bean para garantir SameSite=None nos cookies de sessão
+    @Bean
+    public CookieSameSiteSupplier applicationCookieSameSiteSupplier() {
+        return CookieSameSiteSupplier.ofNone();
     }
 }
 
