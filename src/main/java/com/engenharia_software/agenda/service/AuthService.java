@@ -42,18 +42,8 @@ public class AuthService {
             return null;
         }
 
-        // cria sessão
-        HttpSession session = request.getSession(true);
-        session.setAttribute("usuario", usuario.getNome());
-
-        // define autenticação pro Spring Security
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-            usuario.getNome(), null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
+        // monta o DTO
         UsuarioDTO usuarioDTO = new UsuarioDTO();
-
         usuarioDTO.setId(usuario.getId());
         usuarioDTO.setIdAgenda(usuario.getAgenda().getId());
         usuarioDTO.setNome(usuario.getNome());
@@ -62,6 +52,17 @@ public class AuthService {
         usuarioDTO.setTipoAgenda(usuario.getAgenda().getTipo());
         usuarioDTO.setImagemUrl(usuario.getImagemUrl());
 
+        // cria sessão e guarda o DTO completo
+        HttpSession session = request.getSession(true);
+        session.setAttribute("usuario", usuarioDTO);
+
+        // define autenticação pro Spring Security (opcional, mesmo com security desligado)
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+            usuarioDTO.getNome(), null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         return usuarioDTO;
     }
 }
+
