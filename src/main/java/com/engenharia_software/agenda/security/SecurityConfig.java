@@ -47,7 +47,9 @@ public class SecurityConfig {
                 corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
                 corsConfig.setAllowCredentials(true);
                 corsConfig.setAllowedHeaders(List.of("*"));
+                corsConfig.setExposedHeaders(List.of("Set-Cookie"));
                 return corsConfig;
+
             }))
 
             // Configuração de sessão
