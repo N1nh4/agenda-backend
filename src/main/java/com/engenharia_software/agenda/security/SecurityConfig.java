@@ -22,10 +22,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desabilita CSRF, pois vamos usar JWT
+            // Em APIs com frontend separado, normalmente desabilitamos CSRF
             .csrf(csrf -> csrf.disable())
 
-            // Define acesso público
+            // Definindo quem pode acessar o quê
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/auth/login",
@@ -36,8 +36,8 @@ public class SecurityConfig {
                     "/minha_agenda/**",
                     "/uploads/**",
                     "/h2-console/**"
-                ).permitAll()
-                .anyRequest().authenticated()
+                ).permitAll()  // rotas públicas
+                .anyRequest().authenticated() // resto precisa de login
             )
 
             // Configuração de CORS
@@ -45,17 +45,19 @@ public class SecurityConfig {
                 var corsConfig = new CorsConfiguration();
                 corsConfig.setAllowedOrigins(List.of(localFrontendUrl, prodFrontendUrl));
                 corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                corsConfig.setAllowCredentials(true);
                 corsConfig.setAllowedHeaders(List.of("*"));
-                corsConfig.setExposedHeaders(List.of("Authorization")); // JWT será enviado aqui
-                corsConfig.setAllowCredentials(false); // JWT no storage, não cookies
+                corsConfig.setExposedHeaders(List.of("Set-Cookie"));
                 return corsConfig;
+
             }))
 
-            // Desabilita sessões, JWT não usa sessão
+            // Configuração de sessão
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) 
             );
 
         return http.build();
     }
 }
+
